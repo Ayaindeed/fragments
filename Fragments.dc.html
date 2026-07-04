@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="lib/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta charset="utf-8"></meta>
+  <title>fragments:// — aya</title>
+  <meta name="description" content="aya — painter, slam poet, big data engineer. Pigment on cotton, verses in three languages, pipelines that hum through the night."></meta>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml"></link>
+  <link rel="preconnect" href="https://fonts.googleapis.com"></link>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;700&family=Noto+Kufi+Arabic:wght@400;700&display=swap" rel="stylesheet"></link>
+  <script src="lib/image-slot.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; background: #212b21; }
+    * { box-sizing: border-box; }
+    ::selection { background: #ff4d4d; color: #212b21; }
+    @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    @keyframes flicker { 0% { opacity: 0.97; } 5% { opacity: 1; } 10% { opacity: 0.96; } 15% { opacity: 1; } 70% { opacity: 0.99; } 100% { opacity: 0.97; } }
+    @keyframes glitchA { 0% { clip-path: inset(20% 0 60% 0); transform: translate(-3px, 0); } 20% { clip-path: inset(60% 0 10% 0); transform: translate(3px, 0); } 40% { clip-path: inset(40% 0 40% 0); transform: translate(-2px, 0); } 60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, 0); } 80% { clip-path: inset(10% 0 75% 0); transform: translate(-3px, 0); } 100% { clip-path: inset(50% 0 30% 0); transform: translate(3px, 0); } }
+    @keyframes glitchB { 0% { clip-path: inset(65% 0 15% 0); transform: translate(3px, 0); } 25% { clip-path: inset(15% 0 65% 0); transform: translate(-3px, 0); } 50% { clip-path: inset(45% 0 35% 0); transform: translate(2px, 0); } 75% { clip-path: inset(5% 0 85% 0); transform: translate(-2px, 0); } 100% { clip-path: inset(70% 0 10% 0); transform: translate(3px, 0); } }
+    @keyframes scandrift { 0% { background-position: 0 0; } 100% { background-position: 0 6px; } }
+    @keyframes wave { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
+    @keyframes scansweep { 0% { top: 0; } 100% { top: calc(100% - 3px); } }
+    @keyframes perfpulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    html { scroll-behavior: smooth; }
+
+    /* No element (long Arabic run, fixed-width box, etc.) can ever force the
+       page itself to scroll sideways — this is a hard backstop, not a fix
+       for any one component. */
+    html, body { overflow-x: hidden; max-width: 100%; }
+    #dc-root, #dc-root > .sc-host { max-width: 100%; overflow-x: hidden; }
+
+    /* ── responsive: tablet ─────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      section[id^="layer-"] { padding-left: 22px !important; padding-right: 22px !important; }
+    }
+    /* ── responsive: phone ──────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .fr-topbar { gap: 8px !important; padding: 8px 14px !important; flex-wrap: wrap !important; row-gap: 6px !important; }
+      .fr-topbar .fr-cmd { display: none !important; }
+      /* Wrap, don't scroll — a swipe-only nav reads as "cut off". Wrapping
+         guarantees every link is visible at any width. */
+      .fr-topbar nav { width: 100% !important; margin-left: 0 !important; gap: 6px 16px !important;
+        flex-wrap: wrap !important; justify-content: flex-start !important; }
+      .fr-topbar nav a { font-size: 12px !important; white-space: nowrap !important; }
+      section[id^="layer-"] { padding-top: 56px !important; padding-bottom: 56px !important;
+        padding-left: 18px !important; padding-right: 18px !important; }
+      #layer-00 { min-height: auto !important; padding-top: 60px !important; }
+      #layer-04 { padding-bottom: 22px !important; }
+      .fr-npbar .fr-npwave { display: none !important; }
+      .fr-npbar .fr-nplabel { font-size: 12px !important; }
+      .fr-footer { flex-direction: column !important; align-items: flex-start !important; gap: 18px !important; }
+    }
+    @media (max-width: 420px) {
+      #layer-00 h1 { letter-spacing: 0 !important; }
+    }
+    /* Long unbreakable runs (Arabic titles with elongation ligatures, long
+       URLs, etc.) must break rather than force the row wider than its box. */
+    .fr-wrap-safe { overflow-wrap: anywhere; word-break: break-word; }
+  </style>
+</helmet>
+
+<div style="--ph: {{ phosphor }}; min-height: 100vh; background: #212b21 url('assets/bg-fragments.png') center top / cover fixed no-repeat; color: #9fb8a2; font-family: 'IBM Plex Mono', monospace; position: relative; animation: flicker 4s infinite;">
+
+  <!-- CRT overlays -->
+  <sc-if value="{{ scanlinesOn }}" hint-placeholder-val="{{ true }}">
+    <div style="position: fixed; inset: 0; pointer-events: none; z-index: 90; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px); animation: scandrift 0.4s linear infinite;"></div>
+    <div style="position: fixed; inset: 0; pointer-events: none; z-index: 91; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.22) 100%);"></div>
+  </sc-if>
+
+  <!-- BOOT OVERLAY -->
+  <sc-if value="{{ showBoot }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ skipBoot }}" style="position: fixed; inset: 0; z-index: 200; background: #182018; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+      <div style="width: min(680px, 88vw); font-size: 17px; line-height: 1.9; color: var(--ph, #4afa7b);">
+        <sc-for list="{{ bootLines }}" as="line" hint-placeholder-count="1">
+          <div style="white-space: pre-wrap;">{{ line }}</div>
+        </sc-for>
+        <span style="display: inline-block; width: 10px; height: 19px; background: var(--ph, #4afa7b); animation: blink 1s step-end infinite; vertical-align: text-bottom;"></span>
+        <div style="margin-top: 32px; font-size: 12px; color: #4a5f4d;">[ click to skip ]</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- TOP BAR -->
+  <div class="fr-topbar" style="position: sticky; top: 0; z-index: 80; display: flex; align-items: center; gap: 20px; padding: 10px 24px; background: rgba(33,43,33,0.92); border-bottom: 1px solid #33422f; font-size: 13px; backdrop-filter: blur(2px);">
+    <span style="color: var(--ph, #4afa7b);">aya@wired:~$</span>
+    <span class="fr-cmd" style="color: #6b826e;">./fragments --run</span>
+    <span style="display: inline-block; width: 7px; height: 14px; background: var(--ph, #4afa7b); animation: blink 1.1s step-end infinite;"></span>
+    <nav style="margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap;">
+      <a href="#layer-01" style="color: #6b826e; text-decoration: none;" style-hover="color: var(--ph, #4afa7b);">01·canvas</a>
+      <a href="#layer-02" style="color: #6b826e; text-decoration: none;" style-hover="color: var(--ph, #4afa7b);">02·voice</a>
+      <a href="#layer-03" style="color: #6b826e; text-decoration: none;" style-hover="color: var(--ph, #4afa7b);">03·signal</a>
+      <a href="#layer-04" style="color: #6b826e; text-decoration: none;" style-hover="color: var(--ph, #4afa7b);">04·wired</a>
+      <sc-if value="{{ hasGallery }}" hint-placeholder-val="{{ false }}">
+        <a href="#layer-05" style="color: #6b826e; text-decoration: none;" style-hover="color: var(--ph, #4afa7b);">05·archive</a>
+      </sc-if>
+    </nav>
+  </div>
+
+  <!-- LAYER 00 :: HERO -->
+  <section id="layer-00" data-screen-label="Layer 00 Hero" style="min-height: 88vh; display: flex; flex-direction: column; justify-content: center; padding: 80px 24px 60px; max-width: 1060px; margin: 0 auto;">
+    <div style="font-size: 13px; color: #ff4d4d; letter-spacing: 3px; margin-bottom: 18px;">LAYER 00 :: BOOT — طبقة ٠٠ — COUCHE 00</div>
+    <div style="position: relative; display: inline-block; max-width: 100%;">
+      <h1 style="font-family: 'VT323', monospace; font-size: clamp(30px, 10vw, 150px); margin: 0; line-height: 0.95; color: #dfe9df; letter-spacing: 2px; text-shadow: 0 0 24px rgba(74,250,123,0.25); max-width: 100%; overflow-wrap: anywhere;">A'S FRAGMENTS</h1>
+      <h1 aria-hidden="true" style="font-family: 'VT323', monospace; font-size: clamp(30px, 10vw, 150px); margin: 0; line-height: 0.95; letter-spacing: 2px; position: absolute; inset: 0; color: #ff4d4d; opacity: 0.8; animation: glitchA 2.4s steps(1) infinite; pointer-events: none;">A'S FRAGMENTS</h1>
+      <h1 aria-hidden="true" style="font-family: 'VT323', monospace; font-size: clamp(30px, 10vw, 150px); margin: 0; line-height: 0.95; letter-spacing: 2px; position: absolute; inset: 0; color: var(--ph, #4afa7b); opacity: 0.8; animation: glitchB 3.1s steps(1) infinite; pointer-events: none;">A'S FRAGMENTS</h1>
+    </div>
+    <div dir="{{ taglineDir }}" style="margin-top: 28px; font-size: clamp(18px, 2.6vw, 26px); color: var(--ph, #4afa7b); min-height: 40px; font-family: 'IBM Plex Mono', 'Noto Kufi Arabic', monospace;">{{ tagline }}</div>
+    <div style="margin-top: 10px; font-size: 13px; color: #4a5f4d;">[{{ taglineLang }}] — same person. three signals.</div>
+    <div style="margin-top: 48px; max-width: 620px; font-size: 15px; line-height: 1.9; color: #8aa08d;">subject: aya. detected outputs — pigment on stretched cotton, verses that refuse to sit still, pipelines that hum through the night. status: permanently online. this is not a portfolio. it is the place where the fragments connect.</div>
+  </section>
+
+  <!-- LAYER 01 :: CANVAS -->
+  <section id="layer-01" data-screen-label="Layer 01 Canvas" style="padding: 90px 24px; border-top: 1px solid #33422f; max-width: 1060px; margin: 0 auto;">
+    <div style="font-size: 13px; color: #ff4d4d; letter-spacing: 3px;">LAYER 01 :: CANVAS — اللوحة — TOILE</div>
+    <h2 style="font-family: 'VT323', monospace; font-size: 44px; color: #dfe9df; margin: 12px 0 8px;">/dev/canvas</h2>
+    <p style="max-width: 560px; font-size: 14px; line-height: 1.8; color: #6b826e; margin: 0 0 36px;">pigment, pressure, patience — each canvas is a cached emotion. drop the paintings into the slots; press ▶ under any canvas to hear the track it was painted with.</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px;">
+      <sc-for list="{{ paintings }}" as="p" hint-placeholder-count="6">
+        <figure style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
+          <image-slot id="slot-{{ p.id }}" onClick="{{ p.view }}" shape="rect" src="{{ p.src }}" placeholder="{{ p.placeholder }}" style="width: 100%; height: 300px; border: 1px solid #33422f; cursor: zoom-in;"></image-slot>
+          <figcaption style="font-size: 12px; color: #4a5f4d; display: flex; align-items: center; gap: 14px;"><span style="color: var(--ph, #4afa7b);">{{ p.file }}</span><button onClick="{{ p.scan }}" style="background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; cursor: pointer;" style-hover="border-color: #ff4d4d; color: #ff4d4d;">⌖ scan</button></figcaption>
+        </figure>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- LAYER 02 :: VOICE -->
+  <section id="layer-02" data-screen-label="Layer 02 Voice" style="padding: 90px 24px; border-top: 1px solid #33422f; max-width: 1060px; margin: 0 auto;">
+    <div style="font-size: 13px; color: #ff4d4d; letter-spacing: 3px;">LAYER 02 :: VOICE — الصوت — VOIX</div>
+    <h2 style="font-family: 'VT323', monospace; font-size: 44px; color: #dfe9df; margin: 12px 0 8px;">~/voice/</h2>
+    <p style="max-width: 560px; font-size: 14px; line-height: 1.8; color: #6b826e; margin: 0 0 36px;">verses recorded at 3am, uploaded before doubt finishes loading. arabic, english, sometimes french.</p>
+    <div style="border: 1px solid #33422f; background: rgba(28,42,30,0.15);">
+      <div style="display: flex; gap: 16px; padding: 10px 18px; border-bottom: 1px solid #33422f; font-size: 12px; color: #4a5f4d;"><span>PERM</span><span>SIZE</span><span>NAME</span></div>
+      <sc-for list="{{ tracks }}" as="t" hint-placeholder-count="4">
+        <div onClick="{{ t.play }}" style="display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; padding: 12px 18px; cursor: pointer; border-bottom: 1px solid #2a362a; color: #9fb8a2;" style-hover="background: rgba(74,250,123,0.07); color: var(--ph, #4afa7b);">
+          <span style="font-size: 12px; color: #4a5f4d; flex-shrink: 0;">-rw-r--</span>
+          <span style="font-size: 12px; color: #4a5f4d; flex-shrink: 0; min-width: 42px;">{{ t.size }}</span>
+          <span dir="auto" class="fr-wrap-safe" style="font-size: 15px; min-width: 0; flex: 1 1 140px; font-family: 'IBM Plex Mono', 'Noto Kufi Arabic', monospace;">{{ t.name }}</span>
+          <span dir="auto" style="margin-left: auto; font-size: 13px; color: #6b826e; flex-shrink: 0; font-family: 'Noto Kufi Arabic', monospace;">{{ t.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top: 44px; border: 1px solid #33422f; background: rgba(28,42,30,0.15); padding: 26px 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
+        <span style="font-size: 12px; color: #4a5f4d; letter-spacing: 2px;">cat ~/voice/slam_fragment.txt</span>
+        <div style="display: flex; gap: 8px;">
+          <button onClick="{{ startPerformance }}" style="background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 14px; cursor: pointer;" style-hover="background: #ff4d4d; color: #182018;">▶ perform</button>
+          <button onClick="{{ replayPoem }}" style="background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 14px; cursor: pointer;" style-hover="border-color: var(--ph, #4afa7b); color: var(--ph, #4afa7b);">↺ replay</button>
+        </div>
+      </div>
+      <div dir="rtl" class="fr-wrap-safe" style="font-size: clamp(16px, 2vw, 21px); line-height: 2.2; color: #c9dbc9; white-space: pre-wrap; min-height: 260px; font-family: 'Noto Kufi Arabic', 'IBM Plex Mono', monospace;">{{ poemText }}<span style="display: inline-block; width: 9px; height: 20px; background: var(--ph, #4afa7b); animation: blink 0.9s step-end infinite; vertical-align: text-bottom; margin-right: 2px;"></span></div>
+    </div>
+  </section>
+
+  <!-- LAYER 03 :: SIGNAL -->
+  <section id="layer-03" data-screen-label="Layer 03 Signal" style="padding: 90px 24px; border-top: 1px solid #33422f; max-width: 1060px; margin: 0 auto;">
+    <div style="font-size: 13px; color: #ff4d4d; letter-spacing: 3px;">LAYER 03 :: SIGNAL — الإشارة — SIGNAL</div>
+    <h2 style="font-family: 'VT323', monospace; font-size: 44px; color: #dfe9df; margin: 12px 0 8px;">/var/log/aya</h2>
+    <p style="max-width: 560px; font-size: 14px; line-height: 1.8; color: #6b826e; margin: 0 0 36px;">daylight process: terabytes in, meaning out. the same hands that hold the brush tune the pipelines.</p>
+    <div style="border: 1px solid #33422f; padding: 22px 24px; font-size: 14px; line-height: 2.1; background: rgba(28,42,30,0.15);">
+      <div><span style="color: #4a5f4d;">[06:12:03]</span> <span style="color: var(--ph, #4afa7b);">INFO</span> pipeline.identity — merging streams: paint, voice, data</div>
+      <div><span style="color: #4a5f4d;">[06:12:04]</span> <span style="color: var(--ph, #4afa7b);">INFO</span> schema.self — three languages detected, one speaker</div>
+      <div><span style="color: #4a5f4d;">[06:12:05]</span> <span style="color: #ff4d4d;">WARN</span> boundary.artist_vs_engineer — boundary not found</div>
+      <div><span style="color: #4a5f4d;">[06:12:06]</span> <span style="color: var(--ph, #4afa7b);">INFO</span> job complete. nothing was lost in the merge.</div>
+    </div>
+  </section>
+
+  <!-- LAYER 04 :: WIRED + TERMINAL -->
+  <section id="layer-04" data-screen-label="Layer 04 Wired" style="padding: 90px 24px 28px; border-top: 1px solid #33422f; max-width: 1060px; margin: 0 auto;">
+    <div style="font-size: 13px; color: #ff4d4d; letter-spacing: 3px;">LAYER 04 :: WIRED — الشبكة — LE RÉSEAU</div>
+    <h2 style="font-family: 'VT323', monospace; font-size: 44px; color: #dfe9df; margin: 12px 0 8px;">you are already here</h2>
+    <p style="max-width: 620px; font-size: 15px; line-height: 1.9; color: #8aa08d; margin: 0 0 40px;">resident of the wired: surfing, reading, leaving traces in the signal. the border between the self and the net returned 404. this terminal is live — talk to the system. try <span style="color: var(--ph, #4afa7b);">aya --today</span>.</p>
+    <div style="border: 1px solid var(--ph, #4afa7b); background: #182018; box-shadow: 0 0 40px rgba(74,250,123,0.12);">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid #33422f; font-size: 12px; color: #4a5f4d;">
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: #ff4d4d; display: inline-block;"></span>
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--ph, #4afa7b); display: inline-block;"></span>
+        <span style="margin-left: 8px;">fragments_shell — try: help</span>
+      </div>
+      <div style="padding: 16px 18px; min-height: 180px; max-height: 300px; overflow-y: auto; font-size: 14px; line-height: 1.9;">
+        <sc-for list="{{ termLines }}" as="ln" hint-placeholder-count="2">
+          <div style="white-space: pre-wrap; color: {{ ln.color }};">{{ ln.text }}</div>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-top: 1px solid #33422f;">
+        <span style="color: var(--ph, #4afa7b); font-size: 14px;">aya@wired:~$</span>
+        <input value="{{ termInput }}" onChange="{{ onTermChange }}" onKeyDown="{{ onTermKey }}" spellcheck="false" autocomplete="off" placeholder="type help" style="flex: 1; background: transparent; border: none; outline: none; color: #dfe9df; font-family: 'IBM Plex Mono', monospace; font-size: 14px;"></input>
+      </div>
+    </div>
+    <!-- COLLECTIVE POEM / GUESTBOOK -->
+    <div style="margin-top: 80px;">
+      <div style="font-size: 13px; color: #ff4d4d; letter-spacing: 3px;">COLLECTIVE_POEM.LOG — anonymous transmissions</div>
+      <h3 style="font-family: 'VT323', monospace; font-size: 34px; color: #dfe9df; margin: 12px 0 8px;">voices on the wall</h3>
+      <p style="max-width: 560px; font-size: 14px; line-height: 1.8; color: #6b826e; margin: 0 0 24px;">every visitor leaves one line. the wall glitches them into a single poem that nobody wrote alone.</p>
+      <div style="border: 1px solid #33422f; background: rgba(28,42,30,0.15); padding: 24px 26px; font-size: 16px; line-height: 2.2; font-family: 'IBM Plex Mono', 'Noto Kufi Arabic', monospace;">
+        <sc-for list="{{ guestLines }}" as="g" hint-placeholder-count="4">
+          <span dir="auto" class="fr-wrap-safe" style="color: {{ g.color }};" style-hover="color: #ff4d4d;">{{ g.text }}</span><span style="color: #4a5f4d;"> // </span>
+        </sc-for>
+        <span style="display: inline-block; width: 8px; height: 17px; background: var(--ph, #4afa7b); animation: blink 1s step-end infinite; vertical-align: text-bottom;"></span>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+        <input value="{{ guestInput }}" onChange="{{ onGuestChange }}" onKeyDown="{{ onGuestKey }}" maxlength="90" spellcheck="false" placeholder="leave one line — any language" style="flex: 1; min-width: 240px; background: transparent; border: 1px solid #33422f; outline: none; color: #dfe9df; font-family: 'IBM Plex Mono', monospace; font-size: 14px; padding: 12px 16px;"></input>
+        <button onClick="{{ transmitGuest }}" style="background: transparent; border: 1px solid var(--ph, #4afa7b); color: var(--ph, #4afa7b); font-family: 'IBM Plex Mono', monospace; font-size: 14px; padding: 12px 22px; cursor: pointer;" style-hover="background: var(--ph, #4afa7b); color: #182018;">transmit ▸</button>
+      </div>
+      <div style="margin-top: 10px; font-size: 12px; color: #4a5f4d;">anonymous — no accounts, no names, no trace.</div>
+    </div>
+  </section>
+
+  <!-- LAYER 05 :: ARCHIVE — full gallery, appears once config.json has a "gallery" list -->
+  <sc-if value="{{ hasGallery }}" hint-placeholder-val="{{ false }}">
+    <section id="layer-05" data-screen-label="Layer 05 Archive" style="padding: 90px 24px 56px; border-top: 1px solid #33422f; max-width: 1060px; margin: 0 auto;">
+      <div style="font-size: 13px; color: #ff4d4d; letter-spacing: 3px;">LAYER 05 :: ARCHIVE — الأرشيف — ARCHIVES</div>
+      <h2 style="font-family: 'VT323', monospace; font-size: 44px; color: #dfe9df; margin: 12px 0 8px;">/mnt/archive</h2>
+      <p style="max-width: 560px; font-size: 14px; line-height: 1.8; color: #6b826e; margin: 0 0 36px;">every canvas that survived. click any one to see it up close.</p>
+      <div style="columns: 3 260px; column-gap: 18px;">
+        <sc-for list="{{ gallery }}" as="g" hint-placeholder-count="3">
+          <figure onClick="{{ g.view }}" style="margin: 0 0 18px; break-inside: avoid; border: 1px solid #33422f; background: rgba(28,42,30,0.15); cursor: zoom-in;" style-hover="border-color: var(--ph, #4afa7b);">
+            <img src="{{ g.src }}" alt="{{ g.title }}" loading="lazy" style="width: 100%; display: block;"></img>
+            <figcaption style="font-size: 12px; color: #4a5f4d; padding: 8px 12px; font-family: 'IBM Plex Mono', 'Noto Kufi Arabic', monospace;" dir="auto">{{ g.title }}</figcaption>
+          </figure>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+
+  <div style="max-width: 1060px; margin: 0 auto; padding: 0 24px 26px;">
+    <footer class="fr-footer" style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 18px; font-size: 12px; color: #4a5f4d;">
+      <span>fragments:// v0.1 — aya, 2026</span>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <a href="{{ scLink }}" target="_blank" rel="noopener" aria-label="SoundCloud" title="SoundCloud" style="display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid rgba(74,250,123,0.4); border-radius: 50%; color: var(--ph, #4afa7b); background: rgba(74,250,123,0.06); text-decoration: none;" style-hover="border-color: var(--ph, #4afa7b); background: rgba(74,250,123,0.16);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.999 14.165c-.052 1.796-1.612 3.169-3.4 3.169h-8.18a.68.68 0 0 1-.679-.681V7.862a.749.749 0 0 1 .459-.626s.842-.526 2.352-.526a5.401 5.401 0 0 1 2.844.807 5.531 5.531 0 0 1 2.548 3.66 3.55 3.55 0 0 1 1.081-.169 3.554 3.554 0 0 1 3.375 3.163zm-14.966-6.7a.312.312 0 0 0-.31.276l-.663 5.973.663 5.822a.312.312 0 0 0 .62 0l.755-5.822-.755-5.973a.312.312 0 0 0-.31-.276zm-1.9.472a.312.312 0 0 0-.303.286l-.57 5.5.57 5.395a.311.311 0 0 0 .605 0l.65-5.395-.65-5.5a.312.312 0 0 0-.302-.286zm-1.919.286a.312.312 0 0 0-.31.29l-.482 5.21.482 5.28a.311.311 0 0 0 .621 0l.548-5.28-.548-5.21a.312.312 0 0 0-.31-.29zm-1.926.66a.312.312 0 0 0-.31.302l-.39 4.548.39 5.343a.312.312 0 0 0 .62 0l.447-5.343-.447-4.548a.312.312 0 0 0-.31-.302zm-1.899.98a.31.31 0 0 0-.312.312l-.297 3.556.297 5.303a.312.312 0 0 0 .622 0l.34-5.303-.34-3.556a.311.311 0 0 0-.31-.312zm-1.919.86a.312.312 0 0 0-.31.313l-.204 2.683.204 5.276a.312.312 0 0 0 .62 0l.234-5.276-.234-2.683a.312.312 0 0 0-.31-.313zm-1.899.98a.312.312 0 0 0-.311.313l-.107 1.69.107 5.286a.311.311 0 0 0 .622 0l.122-5.286-.122-1.69a.312.312 0 0 0-.311-.313z"/></svg>
+        </a>
+        <a href="{{ spLink }}" target="_blank" rel="noopener" aria-label="Spotify" title="Spotify" style="display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid rgba(74,250,123,0.4); border-radius: 50%; color: var(--ph, #4afa7b); background: rgba(74,250,123,0.06); text-decoration: none;" style-hover="border-color: var(--ph, #4afa7b); background: rgba(74,250,123,0.16);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        </a>
+      </div>
+      <span dir="rtl" style="font-family: 'Noto Kufi Arabic', monospace;">الإشارة مستمرة — the signal persists — le signal persiste</span>
+    </footer>
+  </div>
+
+  <!-- PERFORMANCE MODE -->
+  <sc-if value="{{ performing }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; z-index: 300; background: radial-gradient(ellipse at center, #182018 0%, #0a0f0a 80%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
+      <button onClick="{{ stopPerformance }}" style="position: absolute; top: 20px; right: 24px; background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 8px 16px; cursor: pointer;" style-hover="border-color: #ff4d4d; color: #ff4d4d;">✕ esc</button>
+      <div style="position: absolute; top: 24px; left: 28px; font-size: 12px; color: #ff4d4d; letter-spacing: 3px; animation: perfpulse 1.4s ease-in-out infinite;">● LIVE — PERFORMANCE MODE</div>
+      <div dir="auto" style="max-width: 860px; font-size: clamp(20px, 3.2vw, 32px); line-height: 2.1; color: #dfe9df; white-space: pre-wrap; text-align: center; font-family: 'IBM Plex Mono', 'Noto Kufi Arabic', monospace; text-shadow: 0 0 30px rgba(74,250,123,0.25); min-height: 60vh; display: flex; align-items: center;">{{ perfText }}</div>
+      <div style="display: flex; align-items: flex-end; gap: 5px; height: 54px; margin-top: 20px;">
+        <sc-for list="{{ perfBars }}" as="b" hint-placeholder-count="12">
+          <span style="width: 5px; height: 48px; background: var(--ph, #4afa7b); animation: wave {{ b.dur }} ease-in-out {{ b.delay }} infinite; transform-origin: bottom; display: inline-block; opacity: 0.8;"></span>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- PAINTING AUTOPSY -->
+  <sc-if value="{{ autopsyOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; z-index: 300; background: rgba(10,15,10,0.88); display: flex; align-items: center; justify-content: center; padding: 24px;">
+      <div style="width: min(560px, 94vw); background: #182018; border: 1px solid #ff4d4d; box-shadow: 0 0 60px rgba(255,77,77,0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #33422f; font-size: 12px; color: #ff4d4d; letter-spacing: 2px;">
+          <span>AUTOPSY :: {{ autopsyFile }}</span>
+          <button onClick="{{ closeAutopsy }}" style="background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 10px; cursor: pointer;" style-hover="border-color: #ff4d4d; color: #ff4d4d;">✕</button>
+        </div>
+        <div style="position: relative; height: 120px; margin: 18px; border: 1px dashed #33422f; overflow: hidden; background: repeating-linear-gradient(45deg, rgba(51,66,47,0.2) 0, rgba(51,66,47,0.2) 8px, transparent 8px, transparent 16px);">
+          <div style="position: absolute; left: 0; right: 0; height: 3px; background: #ff4d4d; box-shadow: 0 0 18px #ff4d4d; animation: scansweep 1.6s ease-in-out infinite alternate;"></div>
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #4a5f4d; letter-spacing: 4px;">SCANNING SUBJECT</div>
+        </div>
+        <div style="padding: 0 18px 20px; font-size: 13px; line-height: 2.1; min-height: 170px;">
+          <sc-for list="{{ autopsyLines }}" as="ln" hint-placeholder-count="2">
+            <div style="white-space: pre-wrap; color: {{ ln.color }};">{{ ln.text }}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- LIGHTBOX — click a painting to view it full-screen -->
+  <sc-if value="{{ lightboxOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeLightbox }}" style="position: fixed; inset: 0; z-index: 310; background: rgba(10,15,10,0.93); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; cursor: zoom-out;">
+      <img src="{{ lightboxSrc }}" alt="{{ lightboxFile }}" style="max-width: 94vw; max-height: 82vh; object-fit: contain; border: 1px solid #33422f; box-shadow: 0 0 80px rgba(74,250,123,0.12); background: #182018;"></img>
+      <div style="margin-top: 16px; display: flex; align-items: center; gap: 16px; font-size: 13px; font-family: 'IBM Plex Mono', monospace;">
+        <span style="color: var(--ph, #4afa7b);">{{ lightboxFile }}</span>
+        <span style="color: #4a5f4d;">[ click anywhere or esc to close ]</span>
+      </div>
+      <button onClick="{{ closeLightbox }}" style="position: absolute; top: 20px; right: 24px; background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 8px 16px; cursor: pointer;" style-hover="border-color: #ff4d4d; color: #ff4d4d;">✕ esc</button>
+    </div>
+  </sc-if>
+
+  <!-- NOW PLAYING BAR (paint ↔ sound pairing) — real embedded player -->
+  <sc-if value="{{ npVisible }}" hint-placeholder-val="{{ false }}">
+    <div class="fr-npbar" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 85; background: #182018; border-top: 1px solid var(--ph, #4afa7b); box-shadow: 0 -6px 30px rgba(0,0,0,0.4);">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 18px; font-size: 13px;">
+        <span style="color: var(--ph, #4afa7b); flex-shrink: 0;">▶ now playing</span>
+        <div class="fr-npwave" style="display: flex; align-items: center; gap: 3px; height: 18px; flex-shrink: 0;">
+          <sc-for list="{{ waveBars }}" as="b" hint-placeholder-count="8">
+            <span style="width: 3px; height: 16px; background: var(--ph, #4afa7b); animation: wave 0.9s ease-in-out {{ b.delay }} infinite; transform-origin: center; display: inline-block;"></span>
+          </sc-for>
+        </div>
+        <span class="fr-nplabel" dir="auto" style="color: #c9dbc9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'IBM Plex Mono', 'Noto Kufi Arabic', monospace;">{{ npLabel }}</span>
+        <a href="{{ npHref }}" target="_blank" style="margin-left: auto; color: #6b826e; text-decoration: none; flex-shrink: 0;" style-hover="color: var(--ph, #4afa7b);">open ↗</a>
+        <button onClick="{{ stopPlaying }}" style="background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 10px; cursor: pointer; flex-shrink: 0;" style-hover="border-color: #ff4d4d; color: #ff4d4d;">✕</button>
+      </div>
+      <iframe src="{{ npEmbed }}" title="now playing" allow="autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture" loading="lazy" style="width: 100%; height: {{ npHeight }}; border: 0; display: block;"></iframe>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;phosphor&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#4afa7b&quot;, &quot;options&quot;: [&quot;#4afa7b&quot;, &quot;#ffb000&quot;, &quot;#6ee7ff&quot;, &quot;#ff5252&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;CRT&quot;}, &quot;scanlines&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;CRT&quot;}, &quot;bootSequence&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;CRT&quot;}}">
+class Component extends DCLogic {
+  state = {
+    cfg: null,
+    bootLines: [],
+    booted: false,
+    langIdx: 0,
+    glitchText: null,
+    nowPlaying: null,
+    guestInput: '',
+    guestLines: null,
+    today: null,
+    termInput: '',
+    termLines: [
+      { text: 'fragments_shell v0.1 — connected.', color: '#4a5f4d' },
+      { text: "type 'help' for commands.", color: '#4a5f4d' }
+    ]
+  };
+
+  taglines = [
+    { t: 'أنا شظايا — لوحة، صوت، إشارة', dir: 'rtl', lang: 'AR' },
+    { t: 'i am fragments — canvas, voice, signal', dir: 'ltr', lang: 'EN' },
+    { t: 'je suis des fragments — toile, voix, signal', dir: 'ltr', lang: 'FR' }
+  ];
+
+  poem = "ربما أنا الخريف منذ البداية، ذلك الفصل الذي لا يأتي ليُصلح، بل ليُسقِط دون أن يسأل عمّا سيتكسّر.\nأَنَا العُبُورُ الَّذِي لَا يُرَبِّتُ عَلَى الكَتِفِ،\nوالوقت حين يفقد صبره.\nحين أمرّ،\nتتعرّى الأشياء من أعذارها،\nوتسقط العلاقات كما تسقط الأوراق: لا صراخ فقط نهاية منطقية";
+
+  startPoem() {
+    clearInterval(this.poemTimer);
+    let i = 0;
+    this.setState({ poemText: '' });
+    this.poemTimer = setInterval(() => {
+      i++;
+      this.setState({ poemText: this.poem.slice(0, i) });
+      if (i >= this.poem.length) clearInterval(this.poemTimer);
+    }, 34);
+  }
+
+  seedLines = [
+    'i was here and nobody saw the tab close',
+    'الوحدة مجرد اتصال ضعيف',
+    'je laisse cette ligne comme une empreinte',
+    'the signal remembers what we forget'
+  ];
+
+  // Guestbook: shared across ALL visitors when api/guestbook (Vercel
+  // serverless + Upstash Redis) is deployed and configured. If the api is
+  // absent (local preview) or unconfigured (no KV env vars yet), it falls
+  // back to this browser's localStorage — same behavior as before.
+  loadGuest() {
+    fetch('api/guestbook', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(j => {
+        this.guestShared = true;
+        this.setState({ guestLines: [...this.seedLines, ...(Array.isArray(j.lines) ? j.lines : [])] });
+      })
+      .catch(() => this.loadGuestLocal());
+  }
+
+  loadGuestLocal() {
+    try {
+      const raw = localStorage.getItem('fragments_guestbook_v1');
+      const extra = raw ? JSON.parse(raw) : [];
+      this.setState({ guestLines: [...this.seedLines, ...extra] });
+    } catch (e) {
+      this.setState({ guestLines: this.seedLines });
+    }
+  }
+
+  saveGuestLine(line) {
+    if (this.guestShared) {
+      fetch('api/guestbook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ line })
+      }).catch(() => {});
+      return;
+    }
+    try {
+      const raw = localStorage.getItem('fragments_guestbook_v1');
+      const extra = raw ? JSON.parse(raw) : [];
+      extra.push(line);
+      localStorage.setItem('fragments_guestbook_v1', JSON.stringify(extra.slice(-60)));
+    } catch (e) {}
+  }
+
+  // ── cursor phosphor trail — a faint CRT-beam afterglow following the
+  // mouse. Desktop-only (pointer: fine); touch devices skip it entirely.
+  startTrail() {
+    if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+    const hex = this.props.phosphor || '#4afa7b';
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    const N = 7;
+    this.trailDots = [];
+    this.trailPos = [];
+    for (let i = 0; i < N; i++) {
+      const size = 16 - i * 1.5;
+      const alpha = 0.14 - i * 0.015;
+      const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;left:0;top:0;width:' + size + 'px;height:' + size + 'px;border-radius:50%;pointer-events:none;z-index:95;mix-blend-mode:screen;will-change:transform;transform:translate(-100px,-100px);background:radial-gradient(circle, rgba(' + r + ',' + g + ',' + b + ',' + alpha.toFixed(3) + ') 0%, transparent 70%);';
+      document.body.appendChild(d);
+      this.trailDots.push(d);
+      this.trailPos.push({ x: -100, y: -100 });
+    }
+    this.trailMouse = { x: -100, y: -100 };
+    this.trailMove = (e) => { this.trailMouse.x = e.clientX; this.trailMouse.y = e.clientY; };
+    window.addEventListener('mousemove', this.trailMove);
+    const step = () => {
+      let tx = this.trailMouse.x, ty = this.trailMouse.y;
+      for (let i = 0; i < N; i++) {
+        const p = this.trailPos[i];
+        p.x += (tx - p.x) * 0.35;
+        p.y += (ty - p.y) * 0.35;
+        const size = 16 - i * 1.5;
+        this.trailDots[i].style.transform = 'translate(' + (p.x - size / 2) + 'px,' + (p.y - size / 2) + 'px)';
+        tx = p.x; ty = p.y;
+      }
+      this.trailRaf = requestAnimationFrame(step);
+    };
+    this.trailRaf = requestAnimationFrame(step);
+  }
+
+  stopTrail() {
+    cancelAnimationFrame(this.trailRaf);
+    if (this.trailMove) window.removeEventListener('mousemove', this.trailMove);
+    (this.trailDots || []).forEach(d => d.remove());
+    this.trailDots = null;
+  }
+
+  componentDidMount() {
+    this.timers = [];
+    this.poemStarted = false;
+    this.loadGuest();
+    this.escHandler = (e) => {
+      if (e.key === 'Escape') {
+        if (this.state.performing) this.stopPerformance();
+        if (this.state.autopsy) { clearInterval(this.autopsyTimer); this.setState({ autopsy: null, autopsyLines: [] }); }
+        if (this.state.lightbox) this.setState({ lightbox: null });
+      }
+    };
+    window.addEventListener('keydown', this.escHandler);
+    this.startTrail();
+    fetch('content/now.json', { cache: 'no-store' }).then(r => r.json()).then(t => this.setState({ today: t })).catch(() => {});
+    fetch('content/config.json', { cache: 'no-store' }).then(r => r.json()).then(c => this.setState({ cfg: c })).catch(() => {});
+    this.timers.push(setTimeout(() => {
+      const el = document.getElementById('layer-02');
+      if (!el) return;
+      this.poemObserver = new IntersectionObserver((entries) => {
+        if (entries.some(e => e.isIntersecting) && !this.poemStarted) {
+          this.poemStarted = true;
+          this.startPoem();
+        }
+      }, { threshold: 0.25 });
+      this.poemObserver.observe(el);
+    }, 800));
+    if (this.props.bootSequence === false) {
+      this.setState({ booted: true });
+    } else {
+      const lines = [
+        '> fragments://init',
+        '> mounting layer 00 … OK',
+        '> voice … الصوت … voix … OK',
+        '> canvas driver loaded … OK',
+        '> welcome, aya. you are connected.'
+      ];
+      lines.forEach((l, i) => {
+        this.timers.push(setTimeout(() => {
+          this.setState(s => ({ bootLines: [...s.bootLines, l] }));
+        }, 420 * (i + 1)));
+      });
+      this.timers.push(setTimeout(() => this.setState({ booted: true }), 420 * lines.length + 900));
+    }
+    this.langTimer = setInterval(() => {
+      const next = (this.state.langIdx + 1) % this.taglines.length;
+      this.setState({ glitchText: this.scramble(this.taglines[next].t) });
+      this.timers.push(setTimeout(() => {
+        this.setState({ langIdx: next, glitchText: null });
+      }, 260));
+    }, 4200);
+  }
+
+  componentWillUnmount() {
+    (this.timers || []).forEach(clearTimeout);
+    clearInterval(this.langTimer);
+    clearInterval(this.poemTimer);
+    clearTimeout(this.perfTimer);
+    clearInterval(this.autopsyTimer);
+    this.stopPerformanceAudio();
+    this.stopTrail();
+    window.removeEventListener('keydown', this.escHandler);
+    if (this.poemObserver) this.poemObserver.disconnect();
+  }
+
+  scramble(text) {
+    const chars = '01▓▒░#/\\|<>*';
+    return text.split('').map(c => (c === ' ' || Math.random() > 0.55) ? c : chars[Math.floor(Math.random() * chars.length)]).join('');
+  }
+
+  // ── scan: real dominant colors from the painting, named like acrylic tube
+  // labels instead of "red"/"blue". Curated reference points, nearest-match
+  // by plain RGB distance — good enough for a flavor readout, not color
+  // science.
+  PIGMENTS = [
+    { name: 'titanium white', rgb: [252, 250, 245] },
+    { name: 'naples yellow', rgb: [250, 216, 122] },
+    { name: 'cadmium yellow', rgb: [255, 231, 20] },
+    { name: 'yellow ochre', rgb: [204, 153, 60] },
+    { name: 'raw sienna', rgb: [166, 106, 38] },
+    { name: 'cadmium orange', rgb: [237, 118, 14] },
+    { name: 'burnt sienna', rgb: [138, 65, 36] },
+    { name: 'burnt umber', rgb: [84, 61, 48] },
+    { name: 'raw umber', rgb: [115, 92, 58] },
+    { name: 'venetian red', rgb: [175, 79, 60] },
+    { name: 'cadmium red', rgb: [212, 30, 30] },
+    { name: 'alizarin crimson', rgb: [155, 17, 30] },
+    { name: 'quinacridone magenta', rgb: [161, 24, 90] },
+    { name: 'rose madder', rgb: [173, 60, 90] },
+    { name: 'dioxazine purple', rgb: [83, 39, 116] },
+    { name: 'indigo', rgb: [42, 33, 91] },
+    { name: 'ultramarine blue', rgb: [18, 10, 143] },
+    { name: 'cobalt blue', rgb: [0, 71, 171] },
+    { name: 'cerulean blue', rgb: [42, 110, 190] },
+    { name: 'prussian blue', rgb: [0, 49, 83] },
+    { name: 'phthalo green', rgb: [18, 78, 68] },
+    { name: 'viridian', rgb: [64, 130, 109] },
+    { name: 'sap green', rgb: [84, 122, 51] },
+    { name: 'emerald green', rgb: [0, 122, 91] },
+    { name: 'payne’s grey', rgb: [83, 98, 103] },
+    { name: 'mars black', rgb: [28, 25, 23] },
+    { name: 'flesh tint', rgb: [237, 189, 158] },
+    { name: 'buff titanium', rgb: [222, 203, 164] }
+  ];
+
+  nearestPigment(r, g, b) {
+    let best = this.PIGMENTS[0].name, bestDist = Infinity;
+    for (const p of this.PIGMENTS) {
+      const [pr, pg, pb] = p.rgb;
+      const d = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2;
+      if (d < bestDist) { bestDist = d; best = p.name; }
+    }
+    return best;
+  }
+
+  // The <image-slot> custom element keeps its <img> inside an open shadow
+  // root — reach in the same way the component's own doubleclick/reframe
+  // logic does.
+  paintingImg(nn) {
+    const slot = document.getElementById('slot-c' + parseInt(nn, 10));
+    const img = slot && slot.shadowRoot && slot.shadowRoot.querySelector('.frame img');
+    return (img && img.naturalWidth && img.style.display !== 'none') ? img : null;
+  }
+
+  scanPigments(nn) {
+    const img = this.paintingImg(nn);
+    if (!img) return null;
+    const size = 28;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      const data = ctx.getImageData(0, 0, size, size).data;
+      const buckets = new Map();
+      let total = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 40) continue; // skip transparent pixels
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        // quantize to reduce near-duplicate shades into the same bucket
+        const key = (r >> 4) + ',' + (g >> 4) + ',' + (b >> 4);
+        const e = buckets.get(key);
+        if (e) { e.count++; e.r += r; e.g += g; e.b += b; }
+        else buckets.set(key, { count: 1, r, g, b });
+        total++;
+      }
+      if (!total) return null;
+      // Merge raw color buckets that nearest-match the same named pigment —
+      // several close shades of one paint shouldn't show up as duplicate
+      // rows in the top 3.
+      const named = new Map();
+      for (const e of buckets.values()) {
+        const name = this.nearestPigment(Math.round(e.r / e.count), Math.round(e.g / e.count), Math.round(e.b / e.count));
+        named.set(name, (named.get(name) || 0) + e.count);
+      }
+      return [...named.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([name, count]) => ({ name, pct: Math.round((count / total) * 100) }));
+    } catch (err) {
+      return null; // cross-origin image (canvas tainted) or decode failure
+    }
+  }
+
+  // ── config-driven content ───────────────────────────────────────────────
+  // Falls back to these if config.json is missing or hasn't loaded yet.
+  DEFAULT_LINKS = {
+    soundcloud: 'https://soundcloud.com/vilaine_a',
+    spotify: 'https://open.spotify.com/show/2ULyziEPMffvgNC4WRTbvc'
+  };
+
+  links() {
+    const c = this.state.cfg && this.state.cfg.links;
+    return { ...this.DEFAULT_LINKS, ...(c || {}) };
+  }
+
+  // Turn any soundcloud/spotify URL into an inline, auto-playing embed URL.
+  embedFor(url) {
+    if (!url) return '';
+    if (/spotify\.com/.test(url)) {
+      return /\/embed\//.test(url) ? url : url.replace('open.spotify.com/', 'open.spotify.com/embed/');
+    }
+    const ph = (this.props.phosphor || '#4afa7b').replace('#', '%23');
+    return 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) +
+      '&color=' + ph +
+      '&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false';
+  }
+
+  // Click a canvas ▶ or a voice track → play it inside the page.
+  playAudio(label, url) {
+    const target = url || this.links().soundcloud;
+    this.setState({ nowPlaying: { label, href: target, embed: this.embedFor(target) } });
+  }
+
+  // The spoken-word audio for the slam fragment. Drop your file at
+  // assets/slam_fragment.mp3 (or set "slam_audio" in config.json). Until
+  // then this stays silent — the text still performs on screen.
+  slamAudioUrl() {
+    return (this.state.cfg && this.state.cfg.slam_audio) || 'assets/slam_fragment.mp3';
+  }
+
+  startPerformanceAudio() {
+    try {
+      if (!this.perfAudio) this.perfAudio = new Audio();
+      const url = this.slamAudioUrl();
+      if (!this.perfAudio.src || this.perfAudio.src.indexOf(url) === -1) this.perfAudio.src = url;
+      this.perfAudio.currentTime = 0;
+      const p = this.perfAudio.play();
+      if (p && p.catch) p.catch(() => {}); // placeholder not added yet — stay silent
+    } catch (e) {}
+  }
+
+  stopPerformanceAudio() {
+    try { if (this.perfAudio) { this.perfAudio.pause(); this.perfAudio.currentTime = 0; } } catch (e) {}
+  }
+
+  startPerformance() {
+    clearInterval(this.poemTimer);
+    this.startPerformanceAudio();
+    this.setState({ performing: true, perfText: '' });
+    let i = 0;
+    const step = () => {
+      if (!this.state.performing) return;
+      i++;
+      this.setState({ perfText: this.poem.slice(0, i) });
+      if (i >= this.poem.length) return;
+      const ch = this.poem[i - 1];
+      const next = this.poem[i];
+      let d = 62;
+      if (ch === '\n' && next === '\n') d = 1100;
+      else if (ch === '\n') d = 520;
+      else if (ch === ',' || ch === '،') d = 300;
+      else if (ch === '—' || ch === '.') d = 420;
+      this.perfTimer = setTimeout(step, d);
+    };
+    step();
+  }
+
+  stopPerformance() {
+    clearTimeout(this.perfTimer);
+    this.stopPerformanceAudio();
+    this.setState({ performing: false });
+  }
+
+  openAutopsy(nn) {
+    clearInterval(this.autopsyTimer);
+    const temps = ['36.1', '37.9', '39.4', '35.2', '38.6', '40.1'];
+    const moods = ['unresolved', 'defiant', 'quiet rage', 'homesick', 'euphoric static', 'tender'];
+    const n = parseInt(nn, 10) - 1;
+    const pigments = this.scanPigments(nn);
+    const pigmentLine = pigments && pigments.length
+      ? '> pigments detected: ' + pigments.map(p => p.name + ' ' + p.pct + '%').join(', ')
+      : '> pigments detected: no signal — drop a painting into this slot first';
+    const lines = [
+      { text: pigmentLine, color: '#9fb8a2' },
+      { text: '> layer count: ' + (3 + (n % 4)) + ' — earlier versions buried, not erased', color: '#9fb8a2' },
+      { text: '> emotional_temperature: ' + temps[n % 6] + '°C — ' + moods[n % 6], color: '#4afa7b' },
+      { text: '> integrity: fragmented. by design.', color: '#ff4d4d' }
+    ];
+    this.setState({ autopsy: { file: 'canvas_' + nn + '.raw' }, autopsyLines: [] });
+    let i = 0;
+    this.autopsyTimer = setInterval(() => {
+      if (i >= lines.length) { clearInterval(this.autopsyTimer); return; }
+      const ln = lines[i]; i++;
+      this.setState(s => ({ autopsyLines: [...(s.autopsyLines || []), ln] }));
+    }, 650);
+  }
+
+  transmitGuest() {
+    const line = (this.state.guestInput || '').trim();
+    if (!line) return;
+    this.saveGuestLine(line);
+    this.setState(s => ({
+      guestLines: [...(s.guestLines || this.seedLines), line],
+      guestInput: ''
+    }));
+  }
+
+  runCommand(raw) {
+    const cmd = raw.trim().toLowerCase();
+    const out = [];
+    const ph = this.props.phosphor || '#4afa7b';
+    const push = (text, color) => out.push({ text, color: color || '#9fb8a2' });
+    if (cmd === 'help') {
+      push('available commands:', '#4a5f4d');
+      push('  whoami        who is aya');
+      push('  layers        list system layers');
+      push('  open <n>      jump to layer (01-04)');
+      push('  aya --today   current reading / listening / painting');
+      push('  lang          language status');
+      push('  lain          …');
+      push('  clear         clear terminal');
+    } else if (cmd === 'whoami') {
+      push('aya — painter / slam poet / big data engineer.', ph);
+      push('all of the above. never only one.', ph);
+    } else if (cmd === 'layers') {
+      push('layer 01 :: canvas — acrylic, physical, slow');
+      push('layer 02 :: voice — slam, recorded, shared');
+      push('layer 03 :: signal — data, pipelines, patterns');
+      push('layer 04 :: wired — here. now.');
+    } else if (cmd.startsWith('open')) {
+      const n = cmd.replace('open', '').trim().padStart(2, '0');
+      if (['00', '01', '02', '03', '04', '05'].includes(n)) {
+        push('jumping to layer ' + n + ' …', ph);
+        setTimeout(() => { window.location.hash = ''; window.location.hash = '#layer-' + n; }, 100);
+      } else {
+        push('unknown layer: ' + n, '#ff4d4d');
+      }
+    } else if (cmd === 'aya --today' || cmd === 'today') {
+      const t = this.state.today || {};
+      push('reading:    ' + (t.reading || '…'), ph);
+      push('listening:  ' + (t.listening || '…'), ph);
+      push('painting:   ' + (t.painting || '…'), ph);
+      push('mood:       ' + (t.mood || '…'), '#ff4d4d');
+    } else if (cmd === 'lang') {
+      push('ar + en + fr — the signal is trilingual.', ph);
+    } else if (cmd === 'lain') {
+      push('she is you. you are her.', '#ff4d4d');
+      push('close the tab — it stays true.', '#ff4d4d');
+    } else if (cmd === 'clear') {
+      this.setState({ termLines: [] });
+      return;
+    } else if (cmd !== '') {
+      push("command not found: " + cmd + " — try 'help'", '#ff4d4d');
+    }
+    this.setState(s => ({
+      termLines: [...s.termLines, { text: 'aya@wired:~$ ' + raw, color: '#4a5f4d' }, ...out].slice(-40)
+    }));
+  }
+
+  renderVals() {
+    const tl = this.taglines[this.state.langIdx];
+    return {
+      phosphor: this.props.phosphor ?? '#4afa7b',
+      scanlinesOn: this.props.scanlines ?? true,
+      showBoot: !this.state.booted && this.props.bootSequence !== false,
+      bootLines: this.state.bootLines,
+      skipBoot: () => this.setState({ booted: true }),
+      tagline: this.state.glitchText ?? tl.t,
+      taglineDir: tl.dir,
+      taglineLang: tl.lang,
+      paintings: (this.state.cfg && Array.isArray(this.state.cfg.paintings) ? this.state.cfg.paintings : [1, 2, 3, 4, 5, 6].map(n => {
+        const nn = String(n).padStart(2, '0');
+        return { file: 'canvas_' + nn + '.raw', src: 'assets/painting-' + nn + '.svg' };
+      })).map((p, i) => {
+        const nn = String(i + 1).padStart(2, '0');
+        const file = p.file || ('canvas_' + nn + '.raw');
+        return {
+          id: 'c' + (i + 1),
+          file,
+          src: p.src || '',
+          placeholder: 'drop painting ' + nn,
+          scan: () => this.openAutopsy(nn),
+          view: () => {
+            const img = this.paintingImg(nn);
+            const src = (img && img.getAttribute('src')) || p.src;
+            if (src) this.setState({ lightbox: { src, file } });
+          }
+        };
+      }),
+      lightboxOpen: !!this.state.lightbox,
+      lightboxSrc: this.state.lightbox ? this.state.lightbox.src : '',
+      lightboxFile: this.state.lightbox ? this.state.lightbox.file : '',
+      closeLightbox: () => this.setState({ lightbox: null }),
+      hasGallery: !!(this.state.cfg && Array.isArray(this.state.cfg.gallery) && this.state.cfg.gallery.length),
+      gallery: ((this.state.cfg && this.state.cfg.gallery) || []).map(g => ({
+        src: g.src,
+        title: g.title || g.src,
+        view: () => this.setState({ lightbox: { src: g.src, file: g.title || g.src } })
+      })),
+      performing: !!this.state.performing,
+      perfText: this.state.perfText ?? '',
+      startPerformance: () => this.startPerformance(),
+      stopPerformance: () => this.stopPerformance(),
+      perfBars: [0,1,2,3,4,5,6,7,8,9,10,11,12,13].map(i => ({ delay: (i * 0.07).toFixed(2) + 's', dur: (0.7 + (i % 5) * 0.12).toFixed(2) + 's' })),
+      autopsyOpen: !!this.state.autopsy,
+      autopsyFile: this.state.autopsy ? this.state.autopsy.file : '',
+      autopsyLines: this.state.autopsyLines || [],
+      closeAutopsy: () => { clearInterval(this.autopsyTimer); this.setState({ autopsy: null, autopsyLines: [] }); },
+      npVisible: !!this.state.nowPlaying,
+      npLabel: this.state.nowPlaying ? this.state.nowPlaying.label : '',
+      npHref: this.state.nowPlaying ? this.state.nowPlaying.href : '#',
+      npEmbed: this.state.nowPlaying ? this.state.nowPlaying.embed : '',
+      npHeight: (this.state.nowPlaying && /spotify/.test(this.state.nowPlaying.embed || '')) ? '152px' : '120px',
+      stopPlaying: () => this.setState({ nowPlaying: null }),
+      scLink: this.links().soundcloud,
+      spLink: this.links().spotify,
+      waveBars: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => ({ delay: (i * 0.09).toFixed(2) + 's' })),
+      guestLines: (this.state.guestLines || this.seedLines).map((text, i) => ({
+        text,
+        color: ['#c9dbc9', 'var(--ph, #4afa7b)', '#8aa08d'][i % 3]
+      })),
+      guestInput: this.state.guestInput,
+      onGuestChange: (e) => this.setState({ guestInput: e.target.value }),
+      onGuestKey: (e) => { if (e.key === 'Enter') this.transmitGuest(); },
+      transmitGuest: () => this.transmitGuest(),
+      tracks: (this.state.cfg && Array.isArray(this.state.cfg.tracks) ? this.state.cfg.tracks : [
+        { name: 'fragment_01.wav — untitled', size: '3.2M', note: 'عربي', audio: this.links().soundcloud },
+        { name: 'fragment_02.wav — untitled', size: '2.8M', note: 'english', audio: this.links().soundcloud },
+        { name: 'fragment_03.wav — untitled', size: '4.1M', note: 'français', audio: this.links().soundcloud },
+        { name: 'fragment_04.wav — slam, live', size: '5.6M', note: 'عربي + en', audio: this.links().soundcloud }
+      ]).map(t => ({
+        name: t.name, size: t.size, note: t.note,
+        play: () => this.playAudio(t.name, t.audio || this.links().soundcloud)
+      })),
+      poemText: this.state.poemText ?? '',
+      replayPoem: () => this.startPoem(),
+      termLines: this.state.termLines,
+      termInput: this.state.termInput,
+      onTermChange: (e) => this.setState({ termInput: e.target.value }),
+      onTermKey: (e) => {
+        if (e.key === 'Enter') {
+          const v = this.state.termInput;
+          this.setState({ termInput: '' });
+          this.runCommand(v);
+        }
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

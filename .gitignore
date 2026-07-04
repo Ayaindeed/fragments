@@ -1,0 +1,16 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+
+# Design-workspace artifacts (regenerated automatically, not part of the site)
+.thumbnail
+.image-slots.state.json
+.claude/
+
+# Node / tooling
+node_modules/
+*.log
+
+.claude
