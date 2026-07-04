@@ -57,6 +57,20 @@ touching code**.
 - **`slam_audio`** is the spoken-word recording that plays when someone
   clicks ▶ perform on the slam fragment. See
   `assets/slam_fragment.README.txt` for how to add it.
+- **`lyrics`** (on each track): the words, one line per list entry — use
+  `""` for a blank line between stanzas:
+
+  ```jsonc
+  "lyrics": [
+    "ربما أنا الخريف منذ البداية،",
+    "",
+    "the second stanza starts here"
+  ]
+  ```
+
+  Visitors click the **✉ words** button on a track row and the words
+  unfold as an animated letter — so they can read while they listen.
+  Tracks with an empty list show a "words not transmitted yet" note.
 
 ## Adding your paintings — just drop files in
 

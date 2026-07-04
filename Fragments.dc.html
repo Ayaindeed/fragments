@@ -42,6 +42,8 @@
     @keyframes wave { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
     @keyframes scansweep { 0% { top: 0; } 100% { top: calc(100% - 3px); } }
     @keyframes perfpulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes letterUnfold { 0% { transform: perspective(1100px) rotateX(-88deg); opacity: 0; } 60% { transform: perspective(1100px) rotateX(10deg); opacity: 1; } 80% { transform: perspective(1100px) rotateX(-4deg); } 100% { transform: perspective(1100px) rotateX(0deg); opacity: 1; } }
     html { scroll-behavior: smooth; }
 
     /* No element (long Arabic run, fixed-width box, etc.) can ever force the
@@ -77,6 +79,13 @@
     /* Long unbreakable runs (Arabic titles with elongation ligatures, long
        URLs, etc.) must break rather than force the row wider than its box. */
     .fr-wrap-safe { overflow-wrap: anywhere; word-break: break-word; }
+
+    /* Letter body scrolls when the lyrics outgrow the page. */
+    .fr-letter-body { scrollbar-width: thin; scrollbar-color: #33422f transparent; }
+    .fr-letter-body::-webkit-scrollbar { width: 8px; }
+    .fr-letter-body::-webkit-scrollbar-track { background: transparent; }
+    .fr-letter-body::-webkit-scrollbar-thumb { background: #33422f; border-radius: 4px; }
+    .fr-letter-body::-webkit-scrollbar-thumb:hover { background: #4a5f4d; }
   </style>
 </helmet>
 
@@ -169,6 +178,7 @@
           <span style="font-size: 12px; color: #4a5f4d; flex-shrink: 0; min-width: 42px;">{{ t.size }}</span>
           <span dir="auto" class="fr-wrap-safe" style="font-size: 15px; min-width: 0; flex: 1 1 140px; font-family: 'IBM Plex Mono', 'Noto Kufi Arabic', monospace;">{{ t.name }}</span>
           <span dir="auto" style="margin-left: auto; font-size: 13px; color: #6b826e; flex-shrink: 0; font-family: 'Noto Kufi Arabic', monospace;">{{ t.note }}</span>
+          <button onClick="{{ t.readWords }}" title="read the words" style="background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; cursor: pointer; flex-shrink: 0;" style-hover="border-color: var(--ph, #4afa7b); color: var(--ph, #4afa7b);">✉ words</button>
         </div>
       </sc-for>
     </div>
@@ -313,6 +323,25 @@
         <span style="color: #4a5f4d;">[ click anywhere or esc to close ]</span>
       </div>
       <button onClick="{{ closeLightbox }}" style="position: absolute; top: 20px; right: 24px; background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 8px 16px; cursor: pointer;" style-hover="border-color: #ff4d4d; color: #ff4d4d;">✕ esc</button>
+    </div>
+  </sc-if>
+
+  <!-- THE LETTER — words of a track, unfolding like a page -->
+  <sc-if value="{{ letterOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeLetter }}" style="position: fixed; inset: 0; z-index: 320; background: rgba(10,15,10,0.9); display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadein 0.25s ease both; cursor: pointer;">
+      <div onClick="{{ eatClick }}" style="width: min(640px, 94vw); max-height: 84vh; display: flex; flex-direction: column; background: #1b241b; border: 1px solid #33422f; box-shadow: 0 30px 80px rgba(0,0,0,0.65), 0 0 46px rgba(74,250,123,0.09); transform-origin: top center; animation: letterUnfold 0.9s cubic-bezier(0.34, 1.2, 0.5, 1) both; cursor: default;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px dashed #33422f; font-size: 12px; color: #4a5f4d; letter-spacing: 2px; flex-shrink: 0;">
+          <span style="color: var(--ph, #4afa7b);">✉ {{ letterTitle }}</span>
+          <span>{{ letterNote }}</span>
+          <button onClick="{{ closeLetter }}" style="background: transparent; border: 1px solid #33422f; color: #6b826e; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 10px; cursor: pointer;" style-hover="border-color: #ff4d4d; color: #ff4d4d;">✕</button>
+        </div>
+        <div class="fr-letter-body fr-wrap-safe" style="padding: 26px 30px 30px; overflow-y: auto; min-height: 0; flex: 1 1 auto; font-size: clamp(15px, 1.9vw, 19px); line-height: 2.15; color: #c9dbc9; font-family: 'Noto Kufi Arabic', 'IBM Plex Mono', monospace; background-image: repeating-linear-gradient(0deg, transparent 0px, transparent 40px, rgba(74,250,123,0.045) 40px, rgba(74,250,123,0.045) 41px); animation: fadein 0.7s ease 0.55s both;">
+          <sc-for list="{{ letterLines }}" as="ln" hint-placeholder-count="4">
+            <div dir="auto" style="white-space: pre-wrap;">{{ ln }}</div>
+          </sc-for>
+        </div>
+        <div style="padding: 10px 18px 14px; font-size: 11px; color: #4a5f4d; border-top: 1px dashed #33422f; display: flex; justify-content: space-between; flex-shrink: 0;"><span>from: aya@wired</span><span dir="rtl" style="font-family: 'Noto Kufi Arabic', monospace;">اقرأ وأنت تسمع</span></div>
+      </div>
     </div>
   </sc-if>
 
@@ -512,6 +541,7 @@ class Component extends DCLogic {
         if (this.state.performing) this.stopPerformance();
         if (this.state.autopsy) { clearInterval(this.autopsyTimer); this.setState({ autopsy: null, autopsyLines: [] }); }
         if (this.state.lightbox) this.setState({ lightbox: null });
+        if (this.state.letter) this.setState({ letter: null });
       }
     };
     window.addEventListener('keydown', this.escHandler);
@@ -926,8 +956,23 @@ class Component extends DCLogic {
         { name: 'fragment_04.wav — slam, live', size: '5.6M', note: 'عربي + en', audio: this.links().soundcloud }
       ]).map(t => ({
         name: t.name, size: t.size, note: t.note,
-        play: () => this.playAudio(t.name, t.audio || this.links().soundcloud)
+        play: () => this.playAudio(t.name, t.audio || this.links().soundcloud),
+        readWords: (e) => {
+          if (e && e.stopPropagation) e.stopPropagation(); // don't also trigger the row's play
+          const text = Array.isArray(t.lyrics) && t.lyrics.length
+            ? t.lyrics.join('\n')
+            : 'الكلمات لم تُرسَل بعد…\nthe words haven\'t been transmitted yet.\n\n(aya will write them here soon — listen meanwhile.)';
+          this.setState({ letter: { title: t.name, note: t.note || '', text } });
+        }
       })),
+      letterOpen: !!this.state.letter,
+      letterTitle: this.state.letter ? this.state.letter.title : '',
+      letterNote: this.state.letter ? this.state.letter.note : '',
+      letterLines: this.state.letter
+        ? this.state.letter.text.split('\n').map(s => s || ' ')
+        : [],
+      closeLetter: () => this.setState({ letter: null }),
+      eatClick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
       poemText: this.state.poemText ?? '',
       replayPoem: () => this.startPoem(),
       termLines: this.state.termLines,

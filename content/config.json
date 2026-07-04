@@ -1,22 +1,49 @@
 {
   "_readme": "Edit this file to change your links and tracks. Paintings are AUTO-DISCOVERED from assets/painting-NN.* (jpg/png/webp/...) — just drop files in, no editing here. See README.md.",
-
   "links": {
     "soundcloud": "https://soundcloud.com/vilaine_a",
     "spotify": "https://open.spotify.com/show/2ULyziEPMffvgNC4WRTbvc",
     "spotify_title": "A's fragments"
   },
-
   "slam_audio": "assets/slam_fragment.mp3",
-
   "_gallery_help": "Optional. Add entries like { \"src\": \"assets/painting-07.jpg\", \"title\": \"untitled, red\" } — the 05·archive layer appears automatically once this list is non-empty.",
   "gallery": [],
-
+  "_lyrics_help": "Write each track's words in its \"lyrics\" list — one line per entry, use \"\" for a blank line. The ✉ words button unfolds them as a letter.",
   "tracks": [
-    { "name": "لغةُ الندوب", "size": "6 min", "note": "Jun 17", "audio": "https://open.spotify.com/episode/1Z2AD0himcheX45CE4809D" },
-    { "name": "لماذا انتظرتُ الضوء؟", "size": "4 min", "note": "Apr 19", "audio": "https://open.spotify.com/episode/68gskkx9uFHWaGOmWk0i1n" },
-    { "name": "أنا الخريف", "size": "5 min", "note": "Feb 7", "audio": "https://open.spotify.com/episode/0owGUt05XV7xglEztDlcxY" },
-    { "name": "الرماد خلفنا", "size": "6 min", "note": "Jan 20", "audio": "https://open.spotify.com/episode/7ueRk3yDFxfjjWH9mH4rSi" },
-    { "name": "تأملات علــــى حافة الوعي", "size": "11 min", "note": "Nov 23", "audio": "https://open.spotify.com/episode/6FDzoUmiQSTIe4GAbohQO7" }
+    {
+      "name": "لغةُ الندوب",
+      "size": "6 min",
+      "note": "Jun 17",
+      "audio": "https://open.spotify.com/episode/1Z2AD0himcheX45CE4809D",
+      "lyrics": []
+    },
+    {
+      "name": "لماذا انتظرتُ الضوء؟",
+      "size": "4 min",
+      "note": "Apr 19",
+      "audio": "https://open.spotify.com/episode/68gskkx9uFHWaGOmWk0i1n",
+      "lyrics": []
+    },
+    {
+      "name": "أنا الخريف",
+      "size": "5 min",
+      "note": "Feb 7",
+      "audio": "https://open.spotify.com/episode/0owGUt05XV7xglEztDlcxY",
+      "lyrics": []
+    },
+    {
+      "name": "الرماد خلفنا",
+      "size": "6 min",
+      "note": "Jan 20",
+      "audio": "https://open.spotify.com/episode/7ueRk3yDFxfjjWH9mH4rSi",
+      "lyrics": []
+    },
+    {
+      "name": "تأملات علــــى حافة الوعي",
+      "size": "11 min",
+      "note": "Nov 23",
+      "audio": "https://open.spotify.com/episode/6FDzoUmiQSTIe4GAbohQO7",
+      "lyrics": []
+    }
   ]
 }
