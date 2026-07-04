@@ -40,10 +40,6 @@ touching code**.
     "spotify_title": "A's fragments"
   },
   "slam_audio": "assets/slam_fragment.mp3",
-  "paintings": [
-    { "file": "canvas_01.raw", "src": "assets/painting-01.jpg" }
-    // ...add or remove as many as you like
-  ],
   "tracks": [
     // the voice list — currently your Spotify episodes
     { "name": "لغةُ الندوب", "size": "6 min", "note": "Jun 17",
@@ -62,14 +58,22 @@ touching code**.
   clicks ▶ perform on the slam fragment. See
   `assets/slam_fragment.README.txt` for how to add it.
 
-## Adding your paintings
+## Adding your paintings — just drop files in
 
-1. Drop your image files into `assets/` (e.g. `assets/painting-01.jpg`).
-   PNG / JPG / WebP all work.
-2. Point each painting's `"src"` in `content/config.json` at that file.
+Name your images `painting-01`, `painting-02`, `painting-03`, … (two-digit
+numbers) and drop them into `assets/`. **That's the whole workflow** — the
+site discovers them by itself, no config editing. Any mix of formats
+works: `.jpg`, `.jpeg`, `.png`, `.webp`, `.avif`.
 
-The `assets/painting-0N.svg` files are just placeholders — replace or
-delete them once your real images are in.
+- The first 6 show in `/dev/canvas`; when there are more, a glowing
+  **paintbrush button** appears under the grid — tap it to unfold the rest.
+- Keep the numbering continuous — one missing number is tolerated, but
+  scanning stops after two missing numbers in a row.
+- If both `painting-01.svg` and `painting-01.jpg` exist, the `.jpg` wins.
+  The current `.svg` files are placeholders — delete them as you replace
+  them with real paintings.
+
+Extras on each canvas:
 
 - **Click a canvas** to open it full-screen (lightbox). Esc or click closes.
 - Each canvas has a **⌖ scan** button — it reads the actual pixels of your
@@ -145,3 +149,24 @@ Security notes (why this is safe to keep public on GitHub):
 
 If you skip the database, everything still works — the wall just stays
 per-browser like before.
+
+## Analytics
+
+The pages already load Vercel Web Analytics
+(`/_vercel/insights/script.js`). To turn it on: Vercel dashboard → your
+project → **Analytics** tab → **Enable**. Visits and page views start
+appearing there — no code changes and no npm packages needed (that script
+IS the plain-HTML version of `@vercel/analytics`; the npm import is only
+for framework builds like Next.js). Outside Vercel the script 404s
+harmlessly.
+
+## After your first deploy
+
+Open `index.html` and replace `https://YOUR-DOMAIN` (two places) with your
+real Vercel URL so shared links show the artwork preview card.
+
+## Publishing
+
+Push this folder to GitHub, then import the repo in Vercel — no build
+settings needed (static site + one serverless function, auto-detected).
+Any other static host works too, minus the shared guestbook and analytics.

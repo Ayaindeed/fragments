@@ -15,6 +15,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"></link>
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;700&family=Noto+Kufi+Arabic:wght@400;700&display=swap" rel="stylesheet"></link>
   <script src="lib/image-slot.js"></script>
+  <!-- Vercel Web Analytics — served by Vercel itself once Analytics is
+       enabled in the project dashboard. 404s harmlessly everywhere else. -->
+  <script defer="defer" src="/_vercel/insights/script.js"></script>
   <style>
     html, body { margin: 0; padding: 0; background: #212b21; }
     * { box-sizing: border-box; }
@@ -128,6 +131,17 @@
         </figure>
       </sc-for>
     </div>
+    <sc-if value="{{ canToggleCanvases }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top: 32px; display: flex; align-items: center; gap: 16px;">
+        <button onClick="{{ toggleShowAll }}" aria-label="{{ toggleCanvasLabel }}" title="{{ toggleCanvasLabel }}" style="width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgba(74,250,123,0.45); background: rgba(74,250,123,0.06); color: var(--ph, #4afa7b); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0 22px rgba(74,250,123,0.15); animation: perfpulse 2.6s ease-in-out infinite; flex-shrink: 0;" style-hover="background: rgba(74,250,123,0.2); box-shadow: 0 0 34px rgba(74,250,123,0.35); animation: none; opacity: 1;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"></path>
+            <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"></path>
+          </svg>
+        </button>
+        <span style="font-size: 13px; color: #b8ccba; font-family: 'IBM Plex Mono', monospace; text-shadow: 0 1px 4px rgba(10,15,10,0.8);">{{ toggleCanvasLabel }}</span>
+      </div>
+    </sc-if>
   </section>
 
   <!-- LAYER 02 :: VOICE -->
@@ -395,6 +409,45 @@ class Component extends DCLogic {
     } catch (e) {}
   }
 
+  // ── canvas auto-discovery ─────────────────────────────────────────────
+  // Finds every assets/painting-NN.<ext> that actually exists by probing
+  // the numbers in order (a static host can't list a folder). Drop
+  // painting-07.jpg into assets/ and it appears on the site — no config
+  // edit. Two-digit numbers; raster formats are preferred over the .svg
+  // placeholders when both exist for the same number. The scan stops
+  // after two consecutive missing numbers, so a single gap is tolerated.
+  discoverPaintings() {
+    const exts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'svg'];
+    const found = [];
+    let misses = 0;
+    const tryIndex = (n) => {
+      if (this.dead) return;
+      if (misses >= 2 || n > 60) {
+        found.sort((a, b) => a.nn.localeCompare(b.nn));
+        if (found.length) this.setState({ discovered: found });
+        return;
+      }
+      const nn = String(n).padStart(2, '0');
+      let pending = exts.length;
+      let hitPri = Infinity;
+      let hitSrc = null;
+      const done = () => {
+        if (--pending > 0) return;
+        if (hitSrc) { found.push({ nn, src: hitSrc }); misses = 0; }
+        else misses++;
+        tryIndex(n + 1);
+      };
+      exts.forEach((ext, pri) => {
+        const img = new Image();
+        const src = 'assets/painting-' + nn + '.' + ext;
+        img.onload = () => { if (pri < hitPri) { hitPri = pri; hitSrc = src; } done(); };
+        img.onerror = () => done();
+        img.src = src;
+      });
+    };
+    tryIndex(1);
+  }
+
   // ── cursor phosphor trail — a faint CRT-beam afterglow following the
   // mouse. Desktop-only (pointer: fine); touch devices skip it entirely.
   startTrail() {
@@ -451,6 +504,7 @@ class Component extends DCLogic {
     };
     window.addEventListener('keydown', this.escHandler);
     this.startTrail();
+    this.discoverPaintings();
     fetch('content/now.json', { cache: 'no-store' }).then(r => r.json()).then(t => this.setState({ today: t })).catch(() => {});
     fetch('content/config.json', { cache: 'no-store' }).then(r => r.json()).then(c => this.setState({ cfg: c })).catch(() => {});
     this.timers.push(setTimeout(() => {
@@ -491,6 +545,7 @@ class Component extends DCLogic {
   }
 
   componentWillUnmount() {
+    this.dead = true;
     (this.timers || []).forEach(clearTimeout);
     clearInterval(this.langTimer);
     clearInterval(this.poemTimer);
@@ -778,25 +833,44 @@ class Component extends DCLogic {
       tagline: this.state.glitchText ?? tl.t,
       taglineDir: tl.dir,
       taglineLang: tl.lang,
-      paintings: (this.state.cfg && Array.isArray(this.state.cfg.paintings) ? this.state.cfg.paintings : [1, 2, 3, 4, 5, 6].map(n => {
-        const nn = String(n).padStart(2, '0');
-        return { file: 'canvas_' + nn + '.raw', src: 'assets/painting-' + nn + '.svg' };
-      })).map((p, i) => {
-        const nn = String(i + 1).padStart(2, '0');
-        const file = p.file || ('canvas_' + nn + '.raw');
+      ...(() => {
+        // Canvas list: auto-discovered assets/painting-NN.* wins; falls back
+        // to config.json "paintings", then to the six placeholder slots
+        // (only visible for the moment before discovery completes).
+        const all = (this.state.discovered && this.state.discovered.length
+          ? this.state.discovered.map(d => ({ nn: d.nn, src: d.src }))
+          : (this.state.cfg && Array.isArray(this.state.cfg.paintings) && this.state.cfg.paintings.length
+            ? this.state.cfg.paintings.map((p, i) => ({ nn: String(i + 1).padStart(2, '0'), src: p.src || '', file: p.file }))
+            : [1, 2, 3, 4, 5, 6].map(n => {
+              const nn = String(n).padStart(2, '0');
+              return { nn, src: 'assets/painting-' + nn + '.svg' };
+            })));
+        const expanded = !!this.state.showAllCanvases;
+        const visible = expanded ? all : all.slice(0, 6);
         return {
-          id: 'c' + (i + 1),
-          file,
-          src: p.src || '',
-          placeholder: 'drop painting ' + nn,
-          scan: () => this.openAutopsy(nn),
-          view: () => {
-            const img = this.paintingImg(nn);
-            const src = (img && img.getAttribute('src')) || p.src;
-            if (src) this.setState({ lightbox: { src, file } });
-          }
+          paintings: visible.map(p => {
+            const nn = p.nn;
+            const file = p.file || ('canvas_' + nn + '.raw');
+            return {
+              id: 'c' + parseInt(nn, 10),
+              file,
+              src: p.src || '',
+              placeholder: 'drop painting ' + nn,
+              scan: () => this.openAutopsy(nn),
+              view: () => {
+                const img = this.paintingImg(nn);
+                const src = (img && img.getAttribute('src')) || p.src;
+                if (src) this.setState({ lightbox: { src, file } });
+              }
+            };
+          }),
+          canToggleCanvases: all.length > 6,
+          toggleCanvasLabel: expanded
+            ? 'fold the archive back'
+            : '+' + (all.length - 6) + ' more canvas' + (all.length - 6 === 1 ? '' : 'es') + ' — tap the brush',
+          toggleShowAll: () => this.setState(s => ({ showAllCanvases: !s.showAllCanvases }))
         };
-      }),
+      })(),
       lightboxOpen: !!this.state.lightbox,
       lightboxSrc: this.state.lightbox ? this.state.lightbox.src : '',
       lightboxFile: this.state.lightbox ? this.state.lightbox.file : '',

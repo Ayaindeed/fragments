@@ -1,5 +1,5 @@
 {
-  "_readme": "Edit this file to change your links, paintings and tracks. No coding needed. After editing, re-upload the folder. See README.md.",
+  "_readme": "Edit this file to change your links and tracks. Paintings are AUTO-DISCOVERED from assets/painting-NN.* (jpg/png/webp/...) — just drop files in, no editing here. See README.md.",
 
   "links": {
     "soundcloud": "https://soundcloud.com/vilaine_a",
@@ -11,15 +11,6 @@
 
   "_gallery_help": "Optional. Add entries like { \"src\": \"assets/painting-07.jpg\", \"title\": \"untitled, red\" } — the 05·archive layer appears automatically once this list is non-empty.",
   "gallery": [],
-
-  "paintings": [
-    { "file": "canvas_01.raw", "src": "assets/painting-01.svg" },
-    { "file": "canvas_02.raw", "src": "assets/painting-02.svg" },
-    { "file": "canvas_03.raw", "src": "assets/painting-03.svg" },
-    { "file": "canvas_04.raw", "src": "assets/painting-04.svg" },
-    { "file": "canvas_05.raw", "src": "assets/painting-05.svg" },
-    { "file": "canvas_06.raw", "src": "assets/painting-06.svg" }
-  ],
 
   "tracks": [
     { "name": "لغةُ الندوب", "size": "6 min", "note": "Jun 17", "audio": "https://open.spotify.com/episode/1Z2AD0himcheX45CE4809D" },
