@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/Fragments.dc.html" }
+  ],
+  "redirects": [
+    { "source": "/Fragments.dc.html", "destination": "/", "permanent": false }
+  ]
+}

@@ -8,8 +8,8 @@ No build step, no framework.
 
 ```
 .
-├── index.html            → entry point (redirect + social/SEO meta)
-├── Fragments.dc.html     → the site itself (markup + logic)
+├── Fragments.dc.html     → the site itself (markup + logic + SEO/social meta)
+├── vercel.json           → serves the site at the root URL (/)
 ├── favicon.svg           → browser-tab icon (blinking cursor)
 ├── api/
 │   └── guestbook.js      → serverless function: shared guestbook storage
@@ -124,7 +124,9 @@ runtime). From this folder:
 python -m http.server 4173
 ```
 
-then open <http://localhost:4173/>.
+then open <http://localhost:4173/Fragments.dc.html> (locally there's no
+`vercel.json` rewrite, so use the full filename; on Vercel the site lives
+at the bare root URL).
 
 ## The shared guestbook (voices on the wall)
 
@@ -159,11 +161,6 @@ appearing there — no code changes and no npm packages needed (that script
 IS the plain-HTML version of `@vercel/analytics`; the npm import is only
 for framework builds like Next.js). Outside Vercel the script 404s
 harmlessly.
-
-## After your first deploy
-
-Open `index.html` and replace `https://YOUR-DOMAIN` (two places) with your
-real Vercel URL so shared links show the artwork preview card.
 
 ## Publishing
 
