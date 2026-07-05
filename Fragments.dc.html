@@ -750,26 +750,44 @@ class Component extends DCLogic {
     try { if (this.perfAudio) { this.perfAudio.pause(); this.perfAudio.currentTime = 0; } } catch (e) {}
   }
 
+  loadPerformanceText() {
+    return fetch('api/slam_fragment', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(j => {
+        const text = (j && typeof j.text === 'string' && j.text.trim()) ? j.text.trim() : this.poem;
+        return text;
+      })
+      .catch(() => this.poem);
+  }
+
   startPerformance() {
-    clearInterval(this.poemTimer);
+    clearTimeout(this.perfTimer);
     this.startPerformanceAudio();
     this.setState({ performing: true, perfText: '' });
-    let i = 0;
-    const step = () => {
+    this.loadPerformanceText().then(text => {
       if (!this.state.performing) return;
-      i++;
-      this.setState({ perfText: this.poem.slice(0, i) });
-      if (i >= this.poem.length) return;
-      const ch = this.poem[i - 1];
-      const next = this.poem[i];
-      let d = 62;
-      if (ch === '\n' && next === '\n') d = 1100;
-      else if (ch === '\n') d = 520;
-      else if (ch === ',' || ch === '،') d = 300;
-      else if (ch === '—' || ch === '.') d = 420;
-      this.perfTimer = setTimeout(step, d);
-    };
-    step();
+      let i = 0;
+      const source = text || this.poem;
+      const step = () => {
+        if (!this.state.performing) return;
+        i++;
+        this.setState({ perfText: source.slice(0, i) });
+        if (i >= source.length) return;
+        const ch = source[i - 1];
+        const next = source[i];
+        const fastPhrase = 'تتعرّى الأشياء من أعذارها،\nوتسقط العلاقات كما تسقط الأوراق: لا صراخ فقط نهاية منطقية';
+        const fastStart = source.indexOf(fastPhrase);
+        let d = 110;
+        if (fastStart !== -1 && i > fastStart && i <= fastStart + fastPhrase.length) d = 48;
+        else if (ch === '\n' && next === '\n') d = 820;
+        else if (ch === '\n') d = 480;
+        else if (ch === ',' || ch === '،') d = 220;
+        else if (ch === '—' || ch === '.' || ch === '!' || ch === '?') d = 280;
+        else if (ch === ' ') d = 70;
+        this.perfTimer = setTimeout(step, d);
+      };
+      step();
+    });
   }
 
   stopPerformance() {
