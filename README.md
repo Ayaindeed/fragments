@@ -165,19 +165,3 @@ Security notes (why this is safe to keep public on GitHub):
 
 If you skip the database, everything still works — the wall just stays
 per-browser like before.
-
-## Analytics
-
-The pages already load Vercel Web Analytics
-(`/_vercel/insights/script.js`). To turn it on: Vercel dashboard → your
-project → **Analytics** tab → **Enable**. Visits and page views start
-appearing there — no code changes and no npm packages needed (that script
-IS the plain-HTML version of `@vercel/analytics`; the npm import is only
-for framework builds like Next.js). Outside Vercel the script 404s
-harmlessly.
-
-## Publishing
-
-Push this folder to GitHub, then import the repo in Vercel — no build
-settings needed (static site + one serverless function, auto-detected).
-Any other static host works too, minus the shared guestbook and analytics.
