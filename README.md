@@ -145,12 +145,23 @@ at the bare root URL).
 ## The shared guestbook (voices on the wall)
 
 Out of the box, each visitor's lines only persist in their own browser.
-To make the wall **shared across all visitors** (a true collective poem):
+To make the wall **shared across all visitors** (a true collective poem)
+with Supabase:
 
-1. In your Vercel project: **Marketplace → Upstash → Redis** — create the
-   free database and connect it to the project. This automatically adds
-   two environment variables (`KV_REST_API_URL`, `KV_REST_API_TOKEN`).
-2. Redeploy. That's it — `api/guestbook.js` starts storing lines.
+1. Create a Supabase project (free tier is fine).
+2. In Supabase SQL Editor, run:
+
+  create table if not exists public.guestbook_lines (
+    id bigserial primary key,
+    line text not null,
+    created_at timestamptz not null default now()
+  );
+
+3. In your Vercel project settings, add environment variables:
+  - `SUPABASE_URL` = your project URL (for example `https://xxxx.supabase.co`)
+  - `SUPABASE_SERVICE_ROLE_KEY` = your Supabase service role key
+  - optional: `SUPABASE_GUESTBOOK_TABLE` = `guestbook_lines`
+4. Redeploy. `api/guestbook.js` will start reading/writing shared lines.
 
 Security notes (why this is safe to keep public on GitHub):
 
@@ -158,10 +169,10 @@ Security notes (why this is safe to keep public on GitHub):
   Vercel environment variables. Everything committed to GitHub is public
   site content.
 - **Visitor input is inert.** Lines are capped at 90 chars, stripped of
-  control characters, rate-limited (5/min per IP), and rendered as plain
-  text — pasted HTML or scripts display as text, they never run.
+  control characters, and rendered as plain text — pasted HTML or scripts
+  display as text, they never run.
 - **No personal data.** No accounts, no names, no emails — nothing worth
-  stealing. The wall keeps only the most recent 200 lines.
+  stealing.
 
 If you skip the database, everything still works — the wall just stays
 per-browser like before.
