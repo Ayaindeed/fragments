@@ -146,21 +146,14 @@ at the bare root URL).
 
 Out of the box, each visitor's lines only persist in their own browser.
 To make the wall **shared across all visitors** (a true collective poem)
-with Supabase:
+with Upstash Redis:
 
-1. Create a Supabase project (free tier is fine).
-2. In Supabase SQL Editor, run:
-
-  create table if not exists public.guestbook_lines (
-    id bigserial primary key,
-    line text not null,
-    created_at timestamptz not null default now()
-  );
-
+1. Create an Upstash Redis database.
+2. In the Upstash console, copy the REST URL and REST token.
 3. In your Vercel project settings, add environment variables:
-  - `SUPABASE_URL` = your project URL (for example `https://xxxx.supabase.co`)
-  - `SUPABASE_SERVICE_ROLE_KEY` = your Supabase service role key
-  - optional: `SUPABASE_GUESTBOOK_TABLE` = `guestbook_lines`
+  - `UPSTASH_REDIS_REST_URL` = the Upstash REST URL
+  - `UPSTASH_REDIS_REST_TOKEN` = the Upstash REST token
+  - optional: `UPSTASH_GUESTBOOK_KEY` = `guestbook_lines`
 4. Redeploy. `api/guestbook.js` will start reading/writing shared lines.
 
 Security notes (why this is safe to keep public on GitHub):
@@ -174,5 +167,5 @@ Security notes (why this is safe to keep public on GitHub):
 - **No personal data.** No accounts, no names, no emails — nothing worth
   stealing.
 
-If you skip the database, everything still works — the wall just stays
-per-browser like before.
+If you skip the database, everything still works locally — the wall just
+stays per-browser until the Vercel env vars are set.

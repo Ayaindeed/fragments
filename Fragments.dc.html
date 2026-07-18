@@ -413,8 +413,8 @@ class Component extends DCLogic {
 
   // Guestbook: shared across ALL visitors when api/guestbook (Vercel
   // serverless + Upstash Redis) is deployed and configured. If the api is
-  // absent (local preview) or unconfigured (no KV env vars yet), it falls
-  // back to this browser's localStorage — same behavior as before.
+  // absent (local preview) or unconfigured (no Upstash env vars yet), it
+  // falls back to this browser's localStorage.
   loadGuest() {
     fetch('api/guestbook', { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : Promise.reject()))

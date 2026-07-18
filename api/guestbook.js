@@ -1,15 +1,14 @@
 // Shared guestbook for the collective poem — a Vercel serverless function.
 //
-// Storage: Supabase Postgres through the REST API.
+// Storage: Upstash Redis through the REST API.
 // Required Vercel env vars:
-// - SUPABASE_URL (example: https://xxxx.supabase.co)
-// - SUPABASE_SERVICE_ROLE_KEY (server-side only)
+// - UPSTASH_REDIS_REST_URL
+// - UPSTASH_REDIS_REST_TOKEN
 // Optional env var:
-// - SUPABASE_GUESTBOOK_TABLE (default: guestbook_lines)
+// - UPSTASH_GUESTBOOK_KEY (default: guestbook_lines)
 //
 // Until those env vars exist this endpoint answers 503 and the site
-// automatically falls back to per-browser localStorage, so deploying
-// without the database is still safe.
+// falls back to per-browser localStorage in local preview.
 
 const MAX_LINES = 200; // wall keeps the most recent 200 transmissions
 const MAX_LEN = 90; // must match the input's maxlength in the page
@@ -18,30 +17,34 @@ const MAX_LEN = 90; // must match the input's maxlength in the page
 // source file free of raw control bytes.
 const CTRL_CHARS = new RegExp('[' + String.fromCharCode(0) + '-' + String.fromCharCode(31) + String.fromCharCode(127) + ']', 'g');
 
-function supabaseConfig() {
+function upstashConfig() {
   return {
-    url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_SERVICE_ROLE_KEY,
-    table: process.env.SUPABASE_GUESTBOOK_TABLE || 'guestbook_lines'
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    key: process.env.UPSTASH_GUESTBOOK_KEY || 'guestbook_lines'
   };
 }
 
-async function supabaseRequest(path, options) {
-  const cfg = supabaseConfig();
+async function upstashRequest(command, path) {
+  const cfg = upstashConfig();
   const headers = {
-    apikey: cfg.key,
-    Authorization: 'Bearer ' + cfg.key,
-    ...(options && options.headers ? options.headers : {})
+    Authorization: 'Bearer ' + cfg.token,
+    'Content-Type': 'application/json'
   };
-  const res = await fetch(cfg.url + '/rest/v1/' + path, {
-    ...(options || {}),
-    headers
+  const res = await fetch(cfg.url + (path || ''), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(command)
   });
+  const payload = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = await res.text().catch(() => '');
-    throw new Error('supabase ' + res.status + ' ' + msg);
+    const msg = payload && payload.error ? payload.error : 'request failed';
+    throw new Error('upstash ' + res.status + ' ' + msg);
   }
-  return res;
+  if (payload && payload.error) {
+    throw new Error('upstash ' + payload.error);
+  }
+  return payload ? payload.result : undefined;
 }
 
 function sanitizeLine(line) {
@@ -49,21 +52,17 @@ function sanitizeLine(line) {
 }
 
 module.exports = async (req, res) => {
-  const cfg = supabaseConfig();
-  if (!cfg.url || !cfg.key) {
+  const cfg = upstashConfig();
+  if (!cfg.url || !cfg.token) {
     res.status(503).json({ error: 'guestbook storage not configured' });
     return;
   }
 
   try {
-    const tablePath = encodeURIComponent(cfg.table);
-
     if (req.method === 'GET') {
-      const q = '?select=line,created_at&order=created_at.desc&limit=' + MAX_LINES;
-      const response = await supabaseRequest(tablePath + q, { method: 'GET' });
-      const rows = await response.json();
+      const rows = await upstashRequest(['LRANGE', cfg.key, 0, MAX_LINES - 1]);
       const lines = Array.isArray(rows)
-        ? rows.map(r => (r && typeof r.line === 'string' ? r.line : '')).filter(Boolean).reverse()
+        ? rows.filter(line => typeof line === 'string' && line.trim()).reverse()
         : [];
       res.setHeader('Cache-Control', 'no-store');
       res.status(200).json({ lines });
@@ -83,18 +82,14 @@ module.exports = async (req, res) => {
         return;
       }
 
-      await supabaseRequest(tablePath, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
-        },
-        body: JSON.stringify([{ line }])
-      });
+      await upstashRequest(
+        [
+          ['LPUSH', cfg.key, line],
+          ['LTRIM', cfg.key, 0, MAX_LINES - 1]
+        ],
+        '/multi-exec'
+      );
 
-      // Keep only the newest MAX_LINES rows.
-      // Supabase does not support TRIM on table rows directly; cleanup is
-      // expected via cron/sql job if strict retention is required.
       res.status(200).json({ ok: true });
       return;
     }
