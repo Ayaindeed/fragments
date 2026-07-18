@@ -18,9 +18,11 @@ const MAX_LEN = 90; // must match the input's maxlength in the page
 const CTRL_CHARS = new RegExp('[' + String.fromCharCode(0) + '-' + String.fromCharCode(31) + String.fromCharCode(127) + ']', 'g');
 
 function upstashConfig() {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_KV_URL || process.env.UPSTASH_REDIS_REST_REDIS_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_KV_REST_API_READ_ONLY_TOKEN;
   return {
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    url,
+    token,
     key: process.env.UPSTASH_GUESTBOOK_KEY || 'guestbook_lines'
   };
 }
